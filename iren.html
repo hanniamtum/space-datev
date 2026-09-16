@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>For Iren</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#060916;
+    --deep:#0d1430;
+    --ink:#131d42;
+    --starlight:#e9c86b;
+    --nebula:#b49bf0;
+    --moon:#f3efe6;
+    --dust:rgba(243,239,230,.55);
+    --line:rgba(180,155,240,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--void);
+    color:var(--moon);
+    font-family:"Space Grotesk",system-ui,sans-serif;
+    overflow:hidden;
+  }
+  #sky{position:fixed;inset:0;z-index:0}
+  .glow{
+    position:fixed;z-index:1;pointer-events:none;border-radius:50%;
+    filter:blur(90px);opacity:.5;
+  }
+  .glow.a{width:46vmax;height:46vmax;left:-14vmax;top:-16vmax;background:radial-gradient(circle,#3b2a78,transparent 65%)}
+  .glow.b{width:40vmax;height:40vmax;right:-12vmax;bottom:-14vmax;background:radial-gradient(circle,#1d4a6e,transparent 65%)}
+
+  .stage{position:relative;z-index:2;height:100%;overflow-y:auto}
+  .scene{
+    min-height:100%;display:none;position:relative;
+    align-items:center;justify-content:center;
+    padding:clamp(24px,6vw,64px);
+  }
+
+  /* ---------- planet ---------- */
+  .planets{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .pl{
+    position:absolute;border-radius:50%;
+    box-shadow:inset -10px -12px 28px rgba(0,0,0,.55);
+  }
+  .pl::before{ /* kilau sisi matahari */
+    content:"";position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 30% 26%,rgba(255,255,255,.35),transparent 46%);
+  }
+  .saturn{background:radial-gradient(circle at 32% 28%,#f2dda8,#d49d52 44%,#8d5c27 76%,#3b2510)}
+  .mars{background:radial-gradient(circle at 32% 28%,#f0a276,#c45c35 50%,#6e2b18)}
+  .neptune{background:radial-gradient(circle at 32% 28%,#9ccbff,#3570b8 50%,#13325f)}
+  .violet{background:radial-gradient(circle at 32% 28%,#dcc6ff,#8b70d8 50%,#3d2c6c)}
+  .moon{background:radial-gradient(circle at 34% 30%,#f7f2e6,#cdc5b2 55%,#6e6757)}
+  .ember{background:radial-gradient(circle at 32% 28%,#ffe2a8,#e9c86b 48%,#8c6a1f)}
+
+  .ringed::after{ /* cincin */
+    content:"";position:absolute;left:50%;top:50%;
+    width:210%;height:58%;transform:translate(-50%,-50%) rotate(-19deg);
+    border:2px solid rgba(233,200,107,.5);border-radius:50%;
+    box-shadow:0 0 0 7px rgba(233,200,107,.12);
+  }
+
+  /* sistem orbit: lengan berputar membawa planet kecil */
+  .sys{position:absolute;transform:translate(-50%,-50%)}
+  .sys .path{
+    position:absolute;left:50%;top:50%;width:var(--d);height:var(--d);
+    margin:calc(var(--d)/-2) 0 0 calc(var(--d)/-2);
+    border:1px solid var(--line);border-radius:50%;opacity:.5;
+  }
+  .arm{
+    position:absolute;left:50%;top:50%;width:var(--d);height:var(--d);
+    margin:calc(var(--d)/-2) 0 0 calc(var(--d)/-2);
+    animation:orbit var(--dur,30s) linear infinite;
+  }
+  .arm > .pl{left:calc(100% - 9px);top:50%;transform:translate(-50%,-50%)}
+  .arm.rev{animation-direction:reverse}
+
+  @keyframes orbit{to{transform:rotate(360deg)}}
+  @keyframes drift{50%{transform:translateY(-22px)}}
+  @keyframes sway{50%{transform:translate(14px,-16px)}}
+  .drift{animation:drift 14s ease-in-out infinite}
+  .sway{animation:sway 18s ease-in-out infinite}
+  .scene.on{display:flex;animation:rise .9s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .wrap{width:100%;max-width:640px;text-align:center;position:relative;z-index:1}
+
+  .orbit-mark{
+    width:64px;height:64px;margin:0 auto 32px;position:relative;
+  }
+  .orbit-mark i{position:absolute;inset:0;border:1px solid var(--line);border-radius:50%}
+  .orbit-mark i:nth-child(2){inset:14px;border-color:rgba(233,200,107,.35);transform:rotate(30deg)}
+  .orbit-mark b{
+    position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;
+    background:var(--starlight);border-radius:50%;box-shadow:0 0 16px 4px rgba(233,200,107,.5)
+  }
+
+  h1{
+    font-family:"Cormorant Garamond",serif;font-weight:300;
+    font-size:clamp(2.4rem,7.5vw,4.2rem);line-height:1.08;letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--starlight)}
+  h2{
+    font-family:"Cormorant Garamond",serif;font-weight:300;
+    font-size:clamp(1.9rem,5.5vw,3rem);line-height:1.15;
+  }
+  p.sub{
+    margin-top:18px;color:var(--dust);font-size:.98rem;line-height:1.7;
+    max-width:44ch;margin-left:auto;margin-right:auto;
+  }
+
+  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+  .btn{
+    margin-top:40px;padding:15px 34px;border-radius:999px;
+    background:var(--starlight);color:#1b1405;font-weight:500;letter-spacing:.01em;
+    transition:transform .25s,box-shadow .25s;
+    box-shadow:0 0 0 0 rgba(233,200,107,.4);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 34px -8px rgba(233,200,107,.6)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn.ghost{background:transparent;color:var(--moon);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--nebula);box-shadow:none}
+  :focus-visible{outline:2px solid var(--nebula);outline-offset:4px}
+
+  .choice{display:flex;gap:18px;justify-content:center;margin-top:44px;flex-wrap:wrap}
+  #noBtn{position:relative;transition:left .18s ease,top .18s ease}
+  #noBtn.loose{position:fixed;z-index:20;margin:0}
+
+  /* ---------- mini slideshow di dalam tiap card destinasi ---------- */
+  .card-shots{
+    position:relative;border-radius:12px;overflow:hidden;aspect-ratio:4/3;
+    margin-bottom:12px;background:var(--ink);
+  }
+  .card-shots img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    opacity:0;transition:opacity .7s ease;
+  }
+  .card-shots img.on{opacity:1}
+  .card-shots::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(6,9,22,0) 55%,rgba(6,9,22,.6) 100%);
+  }
+  .shot-dots{
+    position:absolute;left:0;right:0;bottom:7px;z-index:1;
+    display:flex;gap:5px;justify-content:center;
+  }
+  .shot-dots span{width:5px;height:5px;border-radius:50%;background:rgba(243,239,230,.4);transition:background .2s,transform .2s}
+  .shot-dots span.on{background:var(--starlight);transform:scale(1.3)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:38px;text-align:left}
+  .card{
+    border:1px solid var(--line);border-radius:18px;padding:20px 20px 18px;
+    background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.01));
+    transition:border-color .2s,background .2s;position:relative;
+  }
+  .card:hover{border-color:rgba(233,200,107,.5)}
+  .card.picked{border-color:var(--starlight);background:rgba(233,200,107,.1)}
+  .card .name{font-family:"Cormorant Garamond",serif;font-size:1.45rem;line-height:1.2}
+  .card .note{margin-top:7px;font-size:.84rem;color:var(--dust);line-height:1.55}
+  .card .dot{
+    position:absolute;right:16px;top:18px;width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.18)
+  }
+  .card.picked .dot{background:var(--starlight);box-shadow:0 0 12px 3px rgba(233,200,107,.55)}
+
+  .fields{margin-top:36px;display:grid;gap:14px;text-align:left}
+  label{font-size:.8rem;color:var(--dust);display:block;margin-bottom:7px}
+  input,textarea{
+    width:100%;padding:14px 16px;border-radius:14px;font:inherit;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--moon);
+  }
+  input:focus,textarea:focus{border-color:var(--nebula);outline:none}
+  textarea{resize:vertical;min-height:84px}
+  input[type=date],input[type=time]{color-scheme:dark}
+
+  .recap{
+    margin-top:34px;border:1px solid var(--line);border-radius:20px;padding:24px;
+    text-align:left;display:grid;gap:14px;
+  }
+  .row{display:flex;justify-content:space-between;gap:18px;font-size:.95rem}
+  .row span:first-child{color:var(--dust)}
+  .row span:last-child{text-align:right}
+  .back{margin-top:22px;font-size:.85rem;color:var(--dust);text-decoration:underline;text-underline-offset:4px}
+  .back:hover{color:var(--moon)}
+
+  .music{
+    position:fixed;right:18px;bottom:18px;z-index:30;
+    width:46px;height:46px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(13,20,48,.72);
+    backdrop-filter:blur(8px);
+    display:grid;place-items:center;
+  }
+  .music:hover{border-color:var(--starlight)}
+  .music svg{width:19px;height:19px;fill:none;stroke:var(--starlight);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .music .bars span{
+    display:block;width:2.5px;background:var(--starlight);border-radius:2px;
+    animation:eq 1s ease-in-out infinite;
+  }
+  .music .bars{display:flex;gap:3px;align-items:flex-end;height:17px}
+  .music .bars span:nth-child(1){height:60%;animation-delay:-.2s}
+  .music .bars span:nth-child(2){height:100%;animation-delay:-.5s}
+  .music .bars span:nth-child(3){height:45%;animation-delay:-.8s}
+  .music.paused .bars span{animation-play-state:paused;height:40%;opacity:.45}
+  @keyframes eq{50%{height:25%}}
+
+  @media (prefers-reduced-motion:reduce){
+    .scene.on{animation:none}
+    .arm,.drift,.sway{animation:none!important}
+    *{transition:none!important}
+  }
+  @media (max-width:520px){
+    .planets{opacity:.75}
+  }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="glow a"></div>
+<div class="glow b"></div>
+
+<main class="stage">
+
+  <!-- 1 -->
+  <section class="scene on" id="s1">
+    <div class="planets">
+      <div class="sys" style="left:84%;top:74%">
+        <div class="pl saturn ringed drift" style="width:clamp(130px,22vmin,230px);aspect-ratio:1;left:50%;top:50%;transform:translate(-50%,-50%)"></div>
+        <div class="path" style="--d:clamp(230px,38vmin,400px)"></div>
+        <div class="arm" style="--d:clamp(230px,38vmin,400px);--dur:34s">
+          <span class="pl moon" style="width:16px;height:16px"></span>
+        </div>
+      </div>
+      <div class="pl neptune sway" style="width:clamp(40px,7vmin,70px);aspect-ratio:1;left:10%;top:22%"></div>
+    </div>
+    <div class="wrap">
+      <div class="orbit-mark"><i></i><i></i><b></b></div>
+      <h1>Hi Iren,<br>You have <em>Invitation</em> here</h1>
+      <!-- <p class="sub">Sesuatu yang sudah lama menunggu, seperti cahaya bintang yang baru sampai ke bumi malam ini.</p> -->
+      <button class="btn" data-go="s2">Open Invitation</button>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="scene" id="s2">
+    <div class="planets">
+      <div class="sys" style="left:50%;top:50%">
+        <div class="path" style="--d:min(86vmin,760px)"></div>
+        <div class="arm" style="--d:min(86vmin,760px);--dur:46s">
+          <span class="pl mars" style="width:clamp(46px,8vmin,86px);aspect-ratio:1"></span>
+        </div>
+        <div class="arm rev" style="--d:min(86vmin,760px);--dur:46s">
+          <span class="pl violet" style="width:clamp(38px,6.5vmin,70px);aspect-ratio:1"></span>
+        </div>
+      </div>
+      <div class="pl ember drift" style="width:clamp(22px,3vmin,34px);aspect-ratio:1;left:16%;top:78%"></div>
+    </div>
+    <div class="wrap">
+      <h1>Wanna Space Date <em>with me?</em></h1>
+      <p class="sub">I hope you choose "yes", if you dare to choose "no," your phone will explode.</p>
+      <div class="choice">
+        <button class="btn" id="yesBtn">Yes</button>
+        <button class="btn ghost" id="noBtn">No</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="scene" id="s3">
+    <div class="planets">
+      <div class="sys" style="left:6%;top:50%">
+        <div class="pl ember" style="width:clamp(44px,7vmin,78px);aspect-ratio:1;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 70px 14px rgba(233,200,107,.3)"></div>
+        <div class="path" style="--d:clamp(190px,30vmin,330px)"></div>
+        <div class="arm" style="--d:clamp(190px,30vmin,330px);--dur:26s">
+          <span class="pl mars" style="width:18px;height:18px"></span>
+        </div>
+        <div class="path" style="--d:clamp(320px,50vmin,560px)"></div>
+        <div class="arm" style="--d:clamp(320px,50vmin,560px);--dur:52s">
+          <span class="pl neptune" style="width:26px;height:26px"></span>
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <h2>Where are we going?</h2>
+      <p class="sub">Please choose which planet we will visit.</p>
+
+      <div class="grid" id="destGrid"></div>
+      <button class="btn" id="destNext" disabled>Select a date</button>
+      <div><a class="back" href="#" data-go="s2">Back</a></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="scene" id="s4">
+    <div class="planets">
+      <div class="pl moon drift" style="width:clamp(110px,20vmin,200px);aspect-ratio:1;left:-5%;top:12%"></div>
+      <div class="sys" style="left:92%;top:26%">
+        <div class="path" style="--d:clamp(120px,20vmin,200px)"></div>
+        <div class="arm" style="--d:clamp(120px,20vmin,200px);--dur:22s">
+          <span class="pl violet" style="width:22px;height:22px"></span>
+        </div>
+      </div>
+      <div class="pl neptune sway" style="width:clamp(34px,5vmin,56px);aspect-ratio:1;left:78%;top:84%"></div>
+    </div>
+    <div class="wrap">
+      <h2>Choose our destination</h2>
+      <p class="sub">What't your planet do you like?</p>
+      <div class="fields">
+        <div>
+          <label for="tgl">Date</label>
+          <input type="date" id="tgl" />
+        </div>
+        <div>
+          <label for="jam">Hour</label>
+          <input type="time" id="jam" value="18:30" />
+        </div>
+        <div>
+          <label for="nama">Your Name</label>
+          <input type="text" id="nama" placeholder="Ditulis di sini" />
+        </div>
+        <div>
+          <label for="pesan">Any Request?</label>
+          <textarea id="pesan" placeholder="Should i bring a flower? or something else?"></textarea>
+        </div>
+      </div>
+      <button class="btn" id="dateNext">Lihat ringkasan</button>
+      <div><a class="back" href="#" data-go="s3">Change destination</a></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="scene" id="s5">
+    <div class="planets">
+      <div class="sys" style="left:14%;top:80%">
+        <div class="pl violet ringed drift" style="width:clamp(90px,15vmin,150px);aspect-ratio:1;left:50%;top:50%;transform:translate(-50%,-50%)"></div>
+        <div class="path" style="--d:clamp(180px,28vmin,300px)"></div>
+        <div class="arm" style="--d:clamp(180px,28vmin,300px);--dur:30s">
+          <span class="pl moon" style="width:15px;height:15px"></span>
+        </div>
+        <div class="arm rev" style="--d:clamp(180px,28vmin,300px);--dur:44s">
+          <span class="pl ember" style="width:11px;height:11px"></span>
+        </div>
+      </div>
+      <div class="pl mars sway" style="width:clamp(30px,4.5vmin,50px);aspect-ratio:1;left:86%;top:18%"></div>
+    </div>
+    <div class="wrap">
+      <div class="orbit-mark"><i></i><i></i><b></b></div>
+      <h2>It has already been recorded on the star map.</h2>
+      <p class="sub">Just one step. Send this to WhatsApp</p>
+      <div class="recap" id="recap"></div>
+      <button class="btn" id="sendWa">Send me your answer</button>
+      <div><a class="back" href="#" data-go="s4">Reschedule</a></div>
+    </div>
+  </section>
+
+</main>
+
+<audio id="bgm" src="musik.mp3" loop preload="auto"></audio>
+<button class="music paused" id="musicBtn" aria-label="Putar musik" title="Musik">
+  <span class="bars"><span></span><span></span><span></span></span>
+</button>
+
+<script>
+/* ====== GANTI NOMOR WHATSAPP DI SINI ======
+   Format: kode negara tanpa tanda + dan tanpa spasi.
+   Contoh 0812-3456-7890  ->  "6281234567890"            */
+const WA_NUMBER = "6282215013940";
+/* ========================================== */
+
+const DESTINATIONS = [
+  { name:"Bulan", note:"Di antara miliaran manusia di Bumi, sekarang cuma kita berdua yang melihatnya dari sini.",
+    images:["bulan1.jfif","bulan2.jfif","bulan3.jfif"] },
+  { name:"Mars", note:"Makan malam sederhana di Mars sambil melihat planet Bumi sebagai titik kecil di langit.",
+    images:["mars1.jfif","mars2.jfif","mars3.jfif"] },
+  { name:"Saturnus", note:"Duduk di jendela observasi pesawat sambil melihat Saturnus memenuhi sebagian besar pandangan.",
+    images:["saturnus1.jfif","saturnus2.jfif","saturnus3.jfif"] },
+  { name:"Europe", note:"Berjalan di atas permukaan es sambil melihat Jupiter yang sangat besar menggantung di langit.",
+    images:["erop1.jfif","erop2.jfif","erop3.jfif"] },
+  { name:"Titan", note:"Naik kendaraan eksplorasi berdua menyusuri permukaan Titan sambil melihat Saturnus di langit.",
+    images:["titan1.jfif","titan2.jfif","titan3.jfif"] },
+  { name:"Nebula Orion", note:"Pesawat berhenti di tengah ruang antarbintang. Lampu pesawat dimatikan. Di depan terbentang awan gas bercahaya dan ribuan bintang muda.",
+    images:["nebula1.jfif","nebula2.jfif","nebula3.jfif"] }
+];
+/* Setiap destinasi punya file gambarnya sendiri (masih salinan contoh yang sama).
+   Ganti file jpg-nya satu per satu di folder ini dengan foto asli tiap tempat. */
+
+const state = { dest:null, tgl:"", jam:"", nama:"", pesan:"" };
+
+/* ---- slideshow destinasi (ilustrasi SVG bertema langit malam) ---- */
+/* ---- musik latar ---- */
+const bgm = document.getElementById("bgm");
+const musicBtn = document.getElementById("musicBtn");
+const VOLUME = 0.45;          // ubah 0–1 kalau mau lebih pelan/keras
+bgm.volume = 0;
+let fader = null;
+
+function fadeTo(target, done){
+  clearInterval(fader);
+  fader = setInterval(()=>{
+    const step = target > bgm.volume ? .03 : -.05;
+    bgm.volume = Math.min(1, Math.max(0, bgm.volume + step));
+    if(Math.abs(bgm.volume - target) < .04){
+      bgm.volume = target; clearInterval(fader); if(done) done();
+    }
+  }, 60);
+}
+function playMusic(){
+  bgm.play().then(()=>{
+    musicBtn.classList.remove("paused");
+    musicBtn.setAttribute("aria-label","Jeda musik");
+    fadeTo(VOLUME);
+  }).catch(()=>{});
+}
+function pauseMusic(){
+  fadeTo(0, ()=>bgm.pause());
+  musicBtn.classList.add("paused");
+  musicBtn.setAttribute("aria-label","Putar musik");
+}
+musicBtn.addEventListener("click", ()=> bgm.paused ? playMusic() : pauseMusic());
+
+/* browser memblokir autoplay, jadi musik mulai di sentuhan pertama */
+function firstTouch(){
+  playMusic();
+  ["click","keydown","touchstart"].forEach(ev=>document.removeEventListener(ev, firstTouch));
+}
+["click","keydown","touchstart"].forEach(ev=>document.addEventListener(ev, firstTouch));
+
+/* ---- navigasi ---- */
+function go(id){
+  document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
+  document.getElementById(id).classList.add("on");
+  document.querySelector(".stage").scrollTop = 0;
+}
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-go]");
+  if(t){ e.preventDefault(); go(t.dataset.go); }
+});
+
+/* ---- tombol No yang kabur ---- */
+const noBtn = document.getElementById("noBtn");
+function flee(e){
+  if(e) e.preventDefault();
+  const r = noBtn.getBoundingClientRect();
+  noBtn.classList.add("loose");
+  const maxX = window.innerWidth  - r.width  - 16;
+  const maxY = window.innerHeight - r.height - 16;
+  noBtn.style.left = Math.max(16, Math.random()*maxX) + "px";
+  noBtn.style.top  = Math.max(16, Math.random()*maxY) + "px";
+  noBtn.textContent = ["No","Nope","Coba lagi","Hampir","Nggak kena","Yakin?"][Math.floor(Math.random()*6)];
+}
+["mouseenter","click","touchstart","focus"].forEach(ev=>
+  noBtn.addEventListener(ev, flee, {passive:false})
+);
+document.getElementById("yesBtn").addEventListener("click", ()=>go("s3"));
+
+/* ---- destinasi ---- */
+const grid = document.getElementById("destGrid");
+const destNext = document.getElementById("destNext");
+DESTINATIONS.forEach(d=>{
+  const b = document.createElement("button");
+  b.className = "card";
+  const dotsHtml = d.images.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join("");
+  const imgsHtml = d.images.map((src,i)=>`<img src="${src}" class="${i===0?'on':''}" alt="${d.name}">`).join("");
+  b.innerHTML = `
+    <span class="dot"></span>
+    <div class="card-shots">
+      ${imgsHtml}
+      <div class="shot-dots">${dotsHtml}</div>
+    </div>
+    <div class="name">${d.name}</div>
+    <div class="note">${d.note}</div>`;
+  b.addEventListener("click", ()=>{
+    document.querySelectorAll(".card").forEach(c=>c.classList.remove("picked"));
+    b.classList.add("picked");
+    state.dest = d.name;
+    destNext.disabled = false;
+  });
+  grid.appendChild(b);
+
+  /* mini slideshow otomatis untuk card ini */
+  const imgs = b.querySelectorAll(".card-shots img");
+  const dots = b.querySelectorAll(".shot-dots span");
+  let ci = 0;
+  const reduceMotionCards = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(imgs.length > 1 && !reduceMotionCards){
+    setInterval(()=>{
+      ci = (ci + 1) % imgs.length;
+      imgs.forEach((img,i)=>img.classList.toggle("on", i===ci));
+      dots.forEach((dot,i)=>dot.classList.toggle("on", i===ci));
+    }, 2600 + Math.random()*600); // sedikit acak biar tiap card tidak berganti bersamaan
+  }
+});
+destNext.addEventListener("click", ()=>{
+  if(state.dest) go("s4");
+});
+
+/* ---- tanggal ---- */
+const tgl = document.getElementById("tgl");
+tgl.min = new Date().toISOString().split("T")[0];
+document.getElementById("dateNext").addEventListener("click", ()=>{
+  if(!tgl.value){ tgl.focus(); return; }
+  state.tgl   = tgl.value;
+  state.jam   = document.getElementById("jam").value;
+  state.nama  = document.getElementById("nama").value.trim();
+  state.pesan = document.getElementById("pesan").value.trim();
+  renderRecap();
+  go("s5");
+});
+
+function prettyDate(v){
+  if(!v) return "-";
+  return new Date(v+"T00:00:00").toLocaleDateString("id-ID",
+    { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+}
+function renderRecap(){
+  const rows = [
+    ["My Answer", "Yes"],
+    ["Destination", state.dest || "-"],
+    ["Date", prettyDate(state.tgl)],
+    ["Hour", state.jam || "-"]
+  ];
+  if(state.nama)  rows.push(["From", state.nama]);
+  if(state.pesan) rows.push(["Message", state.pesan]);
+  document.getElementById("recap").innerHTML =
+    rows.map(r=>`<div class="row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join("");
+}
+
+/* ---- kirim ke WhatsApp ---- */
+document.getElementById("sendWa").addEventListener("click", ()=>{
+  const lines = [
+    "Hi! My answer is Yes❤",
+    "",
+    "Destination: " + state.dest,
+    "Date: " + prettyDate(state.tgl),
+    "Hour: " + state.jam
+  ];
+  if(state.nama)  lines.push("Dari: " + state.nama);
+  if(state.pesan) lines.push("", "Note: " + state.pesan);
+  window.open("https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(lines.join("\n")), "_blank");
+});
+
+/* ---- langit berbintang ---- */
+const cv = document.getElementById("sky"), ctx = cv.getContext("2d");
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let stars = [], shooter = null;
+
+function build(){
+  cv.width = innerWidth; cv.height = innerHeight;
+  const n = Math.round(innerWidth*innerHeight/7000);
+  stars = Array.from({length:n}, ()=>({
+    x: Math.random()*cv.width,
+    y: Math.random()*cv.height,
+    r: Math.random()*1.25 + .25,
+    a: Math.random()*.6 + .25,
+    s: Math.random()*.012 + .003,
+    p: Math.random()*Math.PI*2
+  }));
+}
+function draw(t){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(const st of stars){
+    const alpha = reduce ? st.a : st.a + Math.sin(t*st.s + st.p)*.28;
+    ctx.globalAlpha = Math.max(.05, Math.min(1, alpha));
+    ctx.fillStyle = st.r > 1.1 ? "#e9c86b" : "#f3efe6";
+    ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, 6.283); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  if(!reduce){
+    if(!shooter && Math.random() < .0024){
+      shooter = { x: Math.random()*cv.width*.7, y: Math.random()*cv.height*.4, l:0 };
+    }
+    if(shooter){
+      shooter.l += 9;
+      const g = ctx.createLinearGradient(shooter.x, shooter.y, shooter.x+shooter.l, shooter.y+shooter.l*.45);
+      g.addColorStop(0,"rgba(243,239,230,0)");
+      g.addColorStop(1,"rgba(243,239,230,.85)");
+      ctx.strokeStyle = g; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(shooter.x, shooter.y);
+      ctx.lineTo(shooter.x + shooter.l, shooter.y + shooter.l*.45);
+      ctx.stroke();
+      if(shooter.l > 260) shooter = null;
+    }
+  }
+  requestAnimationFrame(draw);
+}
+build(); requestAnimationFrame(draw);
+addEventListener("resize", build);
+</script>
+</body>
+</html>

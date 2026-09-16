@@ -306,15 +306,15 @@
       <div class="pl neptune sway" style="width:clamp(34px,5vmin,56px);aspect-ratio:1;left:78%;top:84%"></div>
     </div>
     <div class="wrap">
-      <h2>Choose our destination</h2>
-      <p class="sub">What't your planet do you like?</p>
+      <h2>When do we leave? So I can book a ticket to space.</h2>
+      <!-- <p class="sub">Select Date</p> -->
       <div class="fields">
         <div>
           <label for="tgl">Date</label>
           <input type="date" id="tgl" />
         </div>
         <div>
-          <label for="jam">Hour</label>
+          <label for="jam">Time</label>
           <input type="time" id="jam" value="18:30" />
         </div>
         <div>
@@ -326,7 +326,7 @@
           <textarea id="pesan" placeholder="Should i bring a flower? or something else?"></textarea>
         </div>
       </div>
-      <button class="btn" id="dateNext">Lihat ringkasan</button>
+      <button class="btn" id="dateNext">View Plan</button>
       <div><a class="back" href="#" data-go="s3">Change destination</a></div>
     </div>
   </section>
@@ -449,7 +449,7 @@ function flee(e){
   const maxY = window.innerHeight - r.height - 16;
   noBtn.style.left = Math.max(16, Math.random()*maxX) + "px";
   noBtn.style.top  = Math.max(16, Math.random()*maxY) + "px";
-  noBtn.textContent = ["No","Nope","Coba lagi","Hampir","Nggak kena","Yakin?"][Math.floor(Math.random()*6)];
+  noBtn.textContent = ["No","Nope","Eitss","Almostttt","Eitsh heheheh","Are u suree?"][Math.floor(Math.random()*6)];
 }
 ["mouseenter","click","touchstart","focus"].forEach(ev=>
   noBtn.addEventListener(ev, flee, {passive:false})
@@ -520,7 +520,7 @@ function renderRecap(){
     ["My Answer", "Yes"],
     ["Destination", state.dest || "-"],
     ["Date", prettyDate(state.tgl)],
-    ["Hour", state.jam || "-"]
+    ["Time", state.jam || "-"]
   ];
   if(state.nama)  rows.push(["From", state.nama]);
   if(state.pesan) rows.push(["Message", state.pesan]);
@@ -535,7 +535,7 @@ document.getElementById("sendWa").addEventListener("click", ()=>{
     "",
     "Destination: " + state.dest,
     "Date: " + prettyDate(state.tgl),
-    "Hour: " + state.jam
+    "Time: " + state.jam
   ];
   if(state.nama)  lines.push("Dari: " + state.nama);
   if(state.pesan) lines.push("", "Note: " + state.pesan);
